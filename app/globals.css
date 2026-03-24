@@ -13,11 +13,17 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not(.dark) {
     --background: #0a0a0a;
     --foreground: #ededed;
   }
 }
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
 
 body {
   background: var(--background);
