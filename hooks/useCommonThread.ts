@@ -1,14 +1,14 @@
 /**
  * useCommonThread — All game logic for the Common Thread puzzle.
  *
- * Completely UI-agnostic: no JSX, no CSS, no web-only APIs.
- * Drop this file into React Native and build your own UI on top.
+ * Mechanic:
+ *  - 1 word is shown at start, rest are locked.
+ *  - Each wrong guess unlocks the next word.
+ *  - Correct guess at any point will win (all words revealed).
+ *  - Wrong guess when all words are already shown will lose.
+ *  - Hint button reveals one letter of the answer at a time (no attempt cost).
  *
- * Behaviour:
- *  - First INITIAL_WORDS_SHOWN words are visible at start.
- *  - Each "Reveal Word" press shows the next hidden word (costs 1 attempt).
- *  - Each "Hint" press reveals the next letter of the answer (costs 1 attempt).
- *  - Correct guess wins; running out of attempts loses.
+ * UI-agnostic: no JSX, no CSS. Drop into React Native and build your own UI.
  */
 
 import { useState, useCallback, useEffect } from "react";
@@ -16,13 +16,11 @@ import { PUZZLES, type Puzzle } from "../data/puzzle";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-export const INITIAL_WORDS_SHOWN = 2;
-export const MAX_ATTEMPTS = 5;
+export const INITIAL_WORDS_SHOWN = 1;
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type GameStatus = "playing" | "won" | "lost";
-
 export type FeedbackType = "success" | "error" | "info";
 
 export interface Feedback {
@@ -38,7 +36,7 @@ export interface CommonThreadState {
   /** How many words are currently visible (from the top) */
   revealedCount: number;
 
-  /** Index of word that was just revealed (for animation triggers) */
+  /** Index of the word that was just unlocked, for animation triggers */
   newlyRevealedIndex: number | null;
 
   /** Number of answer letters revealed by hint presses */
@@ -47,29 +45,32 @@ export interface CommonThreadState {
   /** Current text in the guess field */
   guess: string;
 
-  /** Remaining wrong-guess budget */
-  attemptsLeft: number;
+  /** Number of wrong guesses so far */
+  wrongGuesses: number;
 
   /** Overall game status */
   status: GameStatus;
 
-  /** Latest feedback message to show the user */
+  /** Latest feedback message */
   feedback: Feedback | null;
 
-  /** Whether the input row should animate a "shake" */
+  /** Whether the input should animate a shake  */
   shake: boolean;
 
-  // ── Derived helpers (computed, not stored) ──
-  canRevealWord: boolean;
-  canRevealHint: boolean;
+  // ── Derived helpers ──────────────────────────────────────────────────────
+  /** True when all words are already visible */
   allWordsRevealed: boolean;
+
+  /** True when all hint letters are already revealed */
   allHintsRevealed: boolean;
+
+  /** Remaining guesses before the game ends (= words still locked) */
+  guessesLeft: number;
 }
 
 export interface CommonThreadActions {
   setGuess: (text: string) => void;
   submitGuess: () => void;
-  revealNextWord: () => void;
   revealNextHint: () => void;
   nextPuzzle: () => void;
   resetPuzzle: () => void;
@@ -84,12 +85,11 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
   const [newlyRevealedIndex, setNewlyRevealedIndex] = useState<number | null>(null);
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [guess, setGuess] = useState("");
-  const [attemptsLeft, setAttemptsLeft] = useState(MAX_ATTEMPTS);
+  const [wrongGuesses, setWrongGuesses] = useState(0);
   const [status, setStatus] = useState<GameStatus>("playing");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [shake, setShake] = useState(false);
 
-  // Reset all state when puzzle changes
   useEffect(() => {
     const p = PUZZLES[puzzleIndex];
     setPuzzle(p);
@@ -97,36 +97,17 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
     setNewlyRevealedIndex(null);
     setHintsRevealed(0);
     setGuess("");
-    setAttemptsLeft(MAX_ATTEMPTS);
+    setWrongGuesses(0);
     setStatus("playing");
     setFeedback(null);
     setShake(false);
   }, [puzzleIndex]);
-
-  // ── Helpers ──────────────────────────────────────────────────────────────
 
   const triggerShake = useCallback(() => {
     setShake(true);
     setTimeout(() => setShake(false), 500);
   }, []);
 
-  const loseIfExhausted = useCallback(
-    (remaining: number, p: Puzzle) => {
-      if (remaining <= 0) {
-        setStatus("lost");
-        setRevealedCount(p.words.length);
-        setFeedback({
-          text: `Out of attempts! The answer was "${p.answer}".`,
-          type: "error",
-        });
-        return true;
-      }
-      return false;
-    },
-    []
-  );
-
-  // ── Actions ──────────────────────────────────────────────────────────────
 
   const submitGuess = useCallback(() => {
     if (status !== "playing" || !guess.trim()) return;
@@ -137,42 +118,42 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
     if (isCorrect) {
       setStatus("won");
       setRevealedCount(puzzle.words.length);
-      setFeedback({ text: "🎉 Correct! You found the common thread!", type: "success" });
+      setFeedback({
+        text: "Correct! You found the common thread!",
+        type: "success",
+      });
     } else {
-      const next = attemptsLeft - 1;
-      setAttemptsLeft(next);
       triggerShake();
-      if (!loseIfExhausted(next, puzzle)) {
+      const nextRevealed = revealedCount + 1;
+
+      if (revealedCount >= puzzle.words.length) {
+        setStatus("lost");
         setFeedback({
-          text: `Not quite — ${next} attempt${next === 1 ? "" : "s"} remaining.`,
+          text: `The answer was "${puzzle.answer}". Better luck next time!`,
           type: "error",
         });
+      } else {
+        setNewlyRevealedIndex(revealedCount);
+        setRevealedCount(nextRevealed);
+        setWrongGuesses((w) => w + 1);
+
+        if (nextRevealed >= puzzle.words.length) {
+          setFeedback({
+            text: "Last word revealed — this is your final chance!",
+            type: "info",
+          });
+        } else {
+          const remaining = puzzle.words.length - nextRevealed;
+          setFeedback({
+            text: `Not quite — a new word has been revealed. ${remaining} word${remaining === 1 ? "" : "s"} still locked.`,
+            type: "error",
+          });
+        }
       }
     }
-    setGuess("");
-  }, [status, guess, puzzle, attemptsLeft, triggerShake, loseIfExhausted]);
 
-  const revealNextWord = useCallback(() => {
-    if (status !== "playing") return;
-    if (revealedCount >= puzzle.words.length) {
-      setFeedback({ text: "All words are already revealed!", type: "info" });
-      return;
-    }
-    const next = attemptsLeft - 1;
-    if (next < 0) {
-      setFeedback({ text: "No attempts left to reveal a word!", type: "error" });
-      return;
-    }
-    setNewlyRevealedIndex(revealedCount);
-    setRevealedCount((c) => c + 1);
-    setAttemptsLeft(next);
-    if (!loseIfExhausted(next, puzzle)) {
-      setFeedback({
-        text: `Word revealed — ${next} attempt${next === 1 ? "" : "s"} remaining.`,
-        type: "info",
-      });
-    }
-  }, [status, revealedCount, puzzle, attemptsLeft, loseIfExhausted]);
+    setGuess("");
+  }, [status, guess, puzzle, revealedCount, triggerShake]);
 
   const revealNextHint = useCallback(() => {
     if (status !== "playing") return;
@@ -180,53 +161,36 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
       setFeedback({ text: "All hint letters are already revealed!", type: "info" });
       return;
     }
-    const next = attemptsLeft - 1;
-    if (next < 0) {
-      setFeedback({ text: "No attempts left!", type: "error" });
-      return;
-    }
     setHintsRevealed((h) => h + 1);
-    setAttemptsLeft(next);
-    if (!loseIfExhausted(next, puzzle)) {
-      setFeedback({
-        text: `Hint: letter ${hintsRevealed + 1} revealed — ${next} attempt${next === 1 ? "" : "s"} remaining.`,
-        type: "info",
-      });
-    }
-  }, [status, hintsRevealed, puzzle, attemptsLeft, loseIfExhausted]);
+    setFeedback({
+      text: `Hint: letter ${hintsRevealed + 1} of ${puzzle.answer.length} revealed.`,
+      type: "info",
+    });
+  }, [status, hintsRevealed, puzzle]);
 
   const nextPuzzle = useCallback(() => {
     setPuzzleIndex((i) => (i + 1) % PUZZLES.length);
   }, []);
 
   const resetPuzzle = useCallback(() => {
-    setPuzzleIndex((i) => i); // triggers useEffect via same index trick
-    // Force reset by re-calling the effect manually:
     const p = PUZZLES[puzzleIndex];
     setPuzzle(p);
     setRevealedCount(INITIAL_WORDS_SHOWN);
     setNewlyRevealedIndex(null);
     setHintsRevealed(0);
     setGuess("");
-    setAttemptsLeft(MAX_ATTEMPTS);
+    setWrongGuesses(0);
     setStatus("playing");
     setFeedback(null);
     setShake(false);
   }, [puzzleIndex]);
 
-  // ── Derived ──────────────────────────────────────────────────────────────
-
-  const canRevealWord =
-    revealedCount < puzzle.words.length && status === "playing" && attemptsLeft > 0;
-
-  const canRevealHint =
-    hintsRevealed < puzzle.answer.length && status === "playing" && attemptsLeft > 0;
-
   const allWordsRevealed = revealedCount >= puzzle.words.length;
   const allHintsRevealed = hintsRevealed >= puzzle.answer.length;
+  // Remaining guesses = locked words left (each wrong = 1 unlock) + 1 final guess when all shown
+  const guessesLeft = allWordsRevealed ? 1 : puzzle.words.length - revealedCount + 1;
 
   return {
-    // State
     puzzle,
     puzzleIndex,
     totalPuzzles: PUZZLES.length,
@@ -234,19 +198,15 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
     newlyRevealedIndex,
     hintsRevealed,
     guess,
-    attemptsLeft,
+    wrongGuesses,
     status,
     feedback,
     shake,
-    // Derived
-    canRevealWord,
-    canRevealHint,
     allWordsRevealed,
     allHintsRevealed,
-    // Actions
+    guessesLeft,
     setGuess,
     submitGuess,
-    revealNextWord,
     revealNextHint,
     nextPuzzle,
     resetPuzzle,
