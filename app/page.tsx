@@ -6,8 +6,8 @@ import { useRouter } from "next/navigation";
 
 const GAMES = [
   {
-    id: "pinpoint",
-    title: "Pinpoint",
+    id: "commonThread",
+    title: "Common Thread",
     description: "Guess the common category from clues.",
     gradient: "from-purple-500 to-indigo-500",
   },
@@ -36,7 +36,6 @@ export default function Home() {
         isDark ? "bg-gray-950" : "bg-white"
       }`}
     >
-      {/* Theme toggle — fixed top-right */}
       <button
         onClick={toggleTheme}
         aria-label="Toggle theme"
@@ -47,7 +46,6 @@ export default function Home() {
         }`}
       >
         {isDark ? (
-          /* Sun icon */
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <circle cx="12" cy="12" r="5" />
             <line x1="12" y1="1" x2="12" y2="3" />
@@ -60,7 +58,6 @@ export default function Home() {
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
           </svg>
         ) : (
-          /* Moon icon */
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
           </svg>
