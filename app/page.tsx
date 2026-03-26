@@ -17,6 +17,12 @@ const GAMES = [
     description: "Climb the ladder of words in this daily puzzle.",
     gradient: "from-emerald-400 to-teal-500",
   },
+  {
+    id: 'letterchain',
+    title: 'Letter Shift Chain',
+    description: 'Change one letter at a time to reach the target word.',
+    gradient: 'from-orange-400 to-red-500',
+  }
 ];
 
 export default function Home() {
