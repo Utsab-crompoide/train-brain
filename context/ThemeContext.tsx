@@ -1,12 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  ReactNode,
-} from "react";
+import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 
 type Theme = "light" | "dark";
 
@@ -21,7 +15,17 @@ const ThemeContext = createContext<ThemeContextValue>({
 });
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<Theme>("light");
+  const [theme, setTheme] = useState<Theme>("dark");
+  const [mounted, setMounted] = useState(false);
+
+  // Initialize theme from localStorage only on client
+  useEffect(() => {
+    const stored = localStorage.getItem("theme") as Theme | null;
+    if (stored) {
+      setTheme(stored);
+    }
+    setMounted(true);
+  }, []);
 
   // Sync <html> class so Tailwind `dark:` utilities work
   useEffect(() => {
@@ -31,16 +35,18 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } else {
       root.classList.remove("dark");
     }
-  }, [theme]);
+    if (mounted) {
+      localStorage.setItem("theme", theme);
+    }
+  }, [theme, mounted]);
 
-  const toggleTheme = () =>
-    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  const toggleTheme = () => setTheme((prev) => (prev === "light" ? "dark" : "light"));
 
-  return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
-      {children}
-    </ThemeContext.Provider>
-  );
+  if (!mounted) {
+    return <>{children}</>;
+  }
+
+  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
 }
 
 export function useTheme() {

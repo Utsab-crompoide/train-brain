@@ -16,7 +16,7 @@ import { PUZZLES, type Puzzle } from "../data/puzzle";
 export const INITIAL_WORDS_SHOWN = 1;
 
 export type GameStatus = "playing" | "won" | "lost";
-export type FeedbackType = "success" | "error" | "info";
+export type FeedbackType = "success" | "error" | "info" | "showHint";
 
 export interface Feedback {
   text: string;
@@ -132,7 +132,7 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
         if (nextRevealed >= puzzle.words.length) {
           setFeedback({
             text: "Last word revealed — this is your final chance!",
-            type: "info",
+            type: "showHint",
           });
         } else {
           const remaining = puzzle.words.length - nextRevealed;
@@ -158,6 +158,13 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
       text: `Hint: letter ${hintsRevealed + 1} of ${puzzle.answer.length} revealed.`,
       type: "info",
     });
+    if (hintsRevealed + 1 === puzzle.answer.length) {
+      setStatus("lost");
+      setFeedback({
+        text: "Answer revealed by hints is not a valid guess. Game over!",
+        type: "error",
+      });
+    }
   }, [status, hintsRevealed, puzzle]);
 
   const nextPuzzle = useCallback(() => {

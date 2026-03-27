@@ -127,7 +127,8 @@ export default function CommonThreadPage() {
                     : "bg-indigo-50 text-indigo-600 border-indigo-200"
             }`}
           >
-            {game.feedback.text}
+            {game.feedback.text} <br />
+            {game.feedback.type === "showHint" && <span>Hint: {game.puzzle.hint}</span>}
           </div>
         )}
 
@@ -168,7 +169,7 @@ export default function CommonThreadPage() {
                     filter: isDark ? "invert(1)" : "invert(0.4)",
                   }}
                 />
-                Hint
+                Word Hint
               </button>
             </div>
           </div>
