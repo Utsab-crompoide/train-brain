@@ -8,17 +8,12 @@
  *  - Wrong guess when all words are already shown will lose.
  *  - Hint button reveals one letter of the answer at a time (no attempt cost).
  *
- * UI-agnostic: no JSX, no CSS. Drop into React Native and build your own UI.
  */
 
 import { useState, useCallback, useEffect } from "react";
 import { PUZZLES, type Puzzle } from "../data/puzzle";
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
 export const INITIAL_WORDS_SHOWN = 1;
-
-// ─── Types ────────────────────────────────────────────────────────────────────
 
 export type GameStatus = "playing" | "won" | "lost";
 export type FeedbackType = "success" | "error" | "info";
@@ -76,8 +71,6 @@ export interface CommonThreadActions {
   resetPuzzle: () => void;
 }
 
-// ─── Hook ─────────────────────────────────────────────────────────────────────
-
 export function useCommonThread(): CommonThreadState & CommonThreadActions {
   const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [puzzle, setPuzzle] = useState<Puzzle>(PUZZLES[0]);
@@ -107,7 +100,6 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
     setShake(true);
     setTimeout(() => setShake(false), 500);
   }, []);
-
 
   const submitGuess = useCallback(() => {
     if (status !== "playing" || !guess.trim()) return;
