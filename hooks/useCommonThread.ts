@@ -10,6 +10,8 @@
  *
  */
 
+"use client";
+
 import { useState, useCallback, useEffect } from "react";
 import { PUZZLES, type Puzzle } from "../data/puzzle";
 

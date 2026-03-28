@@ -49,18 +49,31 @@ function ProgressDots({ total, revealed, isDark }: { total: number; revealed: nu
   );
 }
 
-function HintBoxes({ answer, hintsRevealed, isDark }: { answer: string; hintsRevealed: number; isDark: boolean }) {
+function HintBoxes({ answer, hintsRevealed, gameStatus, isDark }: { answer: string; hintsRevealed: number; gameStatus: "playing" | "won" | "lost"; isDark: boolean }) {
   return (
     <div className="flex gap-2 flex-wrap justify-center">
       {answer.split("").map((char, i) => {
-        const isRevealed = i < hintsRevealed;
+        const isHintRevealed = i < hintsRevealed;
+        const isGuessRevealed = gameStatus !== "playing";
+        const shouldShowChar = isHintRevealed || isGuessRevealed;
+
         return (
           <div
             key={i}
-            className={`flex items-center justify-center rounded-xl border-2 text-xl font-black transition-all duration-300 ${isRevealed ? "border-indigo-500 bg-indigo-950 text-indigo-300" : isDark ? "border-gray-700 bg-gray-900 text-gray-700" : "border-gray-200 bg-gray-100 text-gray-300"}`}
+            className={`flex items-center justify-center rounded-xl border-2 text-xl font-black transition-all duration-300 ${
+              isHintRevealed
+                ? "border-indigo-500 bg-indigo-950 text-indigo-300"
+                : isGuessRevealed
+                  ? isDark
+                    ? "border-gray-600 bg-gray-800 text-gray-400"
+                    : "border-gray-300 bg-gray-200 text-gray-500"
+                  : isDark
+                    ? "border-gray-700 bg-gray-900 text-gray-700"
+                    : "border-gray-200 bg-gray-100 text-gray-300"
+            }`}
             style={{ width: 44, height: 52 }}
           >
-            {isRevealed ? char.toUpperCase() : "?"}
+            {shouldShowChar ? char.toUpperCase() : "?"}
           </div>
         );
       })}
@@ -104,10 +117,10 @@ export default function CommonThreadPage() {
           ))}
         </div>
 
-        {game.hintsRevealed > 0 && (
+        {(game.hintsRevealed > 0 || game.status !== "playing") && (
           <div className="mb-6 flex flex-col items-center gap-3">
             <p className={`text-xs uppercase tracking-widest ${isDark ? "text-gray-500" : "text-gray-400"}`}>Answer hint</p>
-            <HintBoxes answer={game.puzzle.answer} hintsRevealed={game.hintsRevealed} isDark={isDark} />
+            <HintBoxes answer={game.puzzle.answer} hintsRevealed={game.hintsRevealed} gameStatus={game.status} isDark={isDark} />
           </div>
         )}
 
