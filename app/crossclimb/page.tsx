@@ -1,54 +1,220 @@
-'use client'
-import React from 'react'
-import { useTheme } from '@/context/ThemeContext'
+"use client";
+import React, { useEffect } from "react";
+import { useTheme } from "@/context/ThemeContext";
+import Image from "next/image";
+import SunIcon from "@/public/assets/sun-icon.svg";
+import MoonIcon from "@/public/assets/moon-icon.svg";
+import { useFinalWord } from "@/hooks/useFinalWord";
+import { getDailyPuzzle } from "@/data/finalWordPuzzles";
+import type { RowState } from "@/hooks/useFinalWord";
 
-export default function Crossclimb() {
+const PUZZLE = getDailyPuzzle();
+
+interface CellProps {
+  letter: string;
+  reveal: "idle" | "correct" | "wrong";
+  isDark: boolean;
+  colIndex: number;
+}
+
+function Cell({ letter, reveal, isDark, colIndex }: CellProps) {
+  const base = "flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-lg border-2 text-2xl font-bold uppercase tracking-widest select-none transition-all duration-200";
+
+  const stateClass =
+    reveal === "correct"
+      ? isDark
+        ? "bg-emerald-600 border-emerald-500 text-white"
+        : "bg-emerald-500 border-emerald-400 text-white"
+      : reveal === "wrong"
+        ? isDark
+          ? "bg-red-700 border-red-600 text-white"
+          : "bg-red-500 border-red-400 text-white"
+        : letter
+          ? isDark
+            ? "bg-gray-700 border-gray-500 text-white"
+            : "bg-gray-100 border-gray-400 text-gray-900"
+          : isDark
+            ? "bg-transparent border-gray-700 text-white"
+            : "bg-transparent border-gray-300 text-gray-900";
+
+  return (
+    <div className={`${base} ${stateClass}`} style={{ animationDelay: `${colIndex * 60}ms` }}>
+      {letter}
+    </div>
+  );
+}
+
+interface RowProps {
+  row: RowState;
+  isDark: boolean;
+  divRef: (el: HTMLDivElement | null) => void;
+}
+
+function Row({ row, isDark, divRef }: RowProps) {
+  const isLocked = row.status === "locked";
+  const isWrong = row.status === "wrong";
+  const isCorrect = row.status === "correct";
+
+  const revealState: "idle" | "correct" | "wrong" = isCorrect ? "correct" : isWrong ? "wrong" : "idle";
+
+  return (
+    <div ref={divRef} className={`flex gap-2 transition-all duration-300 ${isLocked ? "opacity-30" : ""} ${isWrong ? "animate-shake" : ""}`}>
+      {row.letters.map((letter, ci) => (
+        <Cell key={ci} letter={isLocked ? "" : letter} reveal={revealState} isDark={isDark} colIndex={ci} />
+      ))}
+    </div>
+  );
+}
+
+export default function FinalWord() {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
 
+  const { rows, activeRowIndex, finalUnlocked, puzzleSolved, submitFinalRow, isFinalRowFilled, rowRefs } = useFinalWord(PUZZLE);
+
+  useEffect(() => {
+    rowRefs.current[activeRowIndex]?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, [activeRowIndex, rowRefs]);
+
+  const activeRow = rows[activeRowIndex];
+  const finalRowIndex = rows.length - 1;
+
   return (
-    <div
-      className={`flex min-h-screen flex-col items-center font-sans transition-colors duration-300 ${
-        isDark ? "bg-gray-950" : "bg-white"
-      }`}
-    >
-      {/* Theme toggle */}
+    <div className={`flex min-h-screen flex-col items-center font-sans transition-colors duration-300 ${isDark ? "bg-gray-950" : "bg-white"}`}>
       <button
         onClick={toggleTheme}
         aria-label="Toggle theme"
-        className={`fixed top-4 right-4 z-50 flex items-center justify-center w-11 h-11 rounded-full shadow-lg transition-all duration-300 ${
-          isDark
-            ? "bg-gray-800 hover:bg-gray-700 text-yellow-300"
-            : "bg-gray-100 hover:bg-gray-200 text-gray-800"
-        }`}
+        className={`fixed top-4 right-4 z-50 flex items-center justify-center w-11 h-11 rounded-full shadow-lg transition-all duration-300 ${isDark ? "bg-gray-800 hover:bg-gray-700 text-yellow-300" : "bg-gray-100 hover:bg-gray-200 text-gray-800"}`}
       >
-        {isDark ? (
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="5" />
-            <line x1="12" y1="1" x2="12" y2="3" />
-            <line x1="12" y1="21" x2="12" y2="23" />
-            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-            <line x1="1" y1="12" x2="3" y2="12" />
-            <line x1="21" y1="12" x2="23" y2="12" />
-            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-          </svg>
-        ) : (
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-          </svg>
-        )}
+        {isDark ? <Image src={MoonIcon} alt="Dark mode" width={20} height={20} /> : <Image src={SunIcon} alt="Light mode" width={20} height={20} />}
       </button>
 
-      <main className="flex w-full max-w-5xl flex-col items-center px-6 py-24 sm:px-12">
-        <h1 className="mb-4 text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-pink-500 via-orange-400 to-yellow-500 sm:text-7xl">
-          Crossclimb
-        </h1>
-        <p className={`text-base ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-          Coming soon…
-        </p>
+      <main className="flex w-full max-w-lg flex-col items-center px-4 pt-16 pb-6 gap-6">
+        <div className="text-center">
+          <h1 className={`text-4xl font-extrabold tracking-tight sm:text-5xl ${isDark ? "text-white" : "text-gray-900"}`}>The Final Word</h1>
+          <p className={`mt-1 text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>Solve each word, unlock the last.</p>
+        </div>
+
+        {!puzzleSolved && (
+          <div className={`w-full rounded-xl px-4 py-3 text-center text-sm font-medium transition-all duration-300 ${isDark ? "bg-gray-800 text-gray-200 border border-gray-700" : "bg-gray-50 text-gray-700 border border-gray-200"}`}>
+            <span className={`text-xs uppercase tracking-widest font-bold ${isDark ? "text-gray-500" : "text-gray-400"}`}>Hint #{activeRowIndex + 1}</span>
+            <p className="mt-0.5">{activeRow?.hint}</p>
+          </div>
+        )}
+
+        {/* ── Win banner ───────────────────────────────────────────── */}
+        {puzzleSolved && <div className={`w-full rounded-xl px-4 py-4 text-center font-bold text-lg animate-fade-in ${isDark ? "bg-emerald-900 text-emerald-300 border border-emerald-700" : "bg-emerald-50 text-emerald-700 border border-emerald-300"}`}>🎉 Puzzle Solved! Great climb!</div>}
+
+        {/* ── Game grid ────────────────────────────────────────────── */}
+        <div className="flex flex-col gap-3 w-full items-center">
+          {rows.map((row, ri) => {
+            const isFinalRow = ri === finalRowIndex;
+
+            return (
+              <div key={ri} className="flex flex-col items-center gap-1 w-full">
+                {/* Dashed divider before the final row */}
+                {isFinalRow && <div className={`w-full max-w-xs border-t-2 border-dashed my-1 ${finalUnlocked ? (isDark ? "border-emerald-600" : "border-emerald-400") : isDark ? "border-gray-700" : "border-gray-300"}`} />}
+
+                {/* Lock label when final row is still locked */}
+                {isFinalRow && row.status === "locked" && <p className={`text-xs uppercase tracking-widest font-semibold mb-1 ${isDark ? "text-gray-600" : "text-gray-400"}`}>🔒 Solve all four to unlock</p>}
+
+                {/* Row cells */}
+                <Row
+                  row={row}
+                  isDark={isDark}
+                  divRef={(el) => {
+                    rowRefs.current[ri] = el;
+                  }}
+                />
+
+                {/* Active row indicator dot (regular rows only) */}
+                {ri === activeRowIndex && !isFinalRow && !puzzleSolved && <span className={`w-1.5 h-1.5 rounded-full mt-0.5 ${isDark ? "bg-emerald-400" : "bg-emerald-500"}`} />}
+
+                {/* Submit button — only for the final row once unlocked */}
+                {isFinalRow && finalUnlocked && !puzzleSolved && (
+                  <button
+                    onClick={submitFinalRow}
+                    disabled={!isFinalRowFilled}
+                    className={`mt-2 px-8 py-2.5 rounded-xl text-sm font-bold uppercase tracking-widest transition-all duration-200 ${
+                      isFinalRowFilled
+                        ? isDark
+                          ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/40 active:scale-95"
+                          : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-200 active:scale-95"
+                        : isDark
+                          ? "bg-gray-800 text-gray-600 cursor-not-allowed"
+                          : "bg-gray-100 text-gray-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Submit
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Progress bar ─────────────────────────────────────────── */}
+        <div className="w-full max-w-xs mt-2">
+          <div className={`text-xs text-center mb-1 ${isDark ? "text-gray-600" : "text-gray-400"}`}>
+            {rows.filter((r) => r.status === "correct").length} / {rows.length} solved
+          </div>
+          <div className={`w-full h-1.5 rounded-full overflow-hidden ${isDark ? "bg-gray-800" : "bg-gray-200"}`}>
+            <div
+              className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+              style={{
+                width: `${(rows.filter((r) => r.status === "correct").length / rows.length) * 100}%`,
+              }}
+            />
+          </div>
+        </div>
       </main>
+
+      {/* ── Global animations ────────────────────────────────────── */}
+      <style jsx global>{`
+        @keyframes shake {
+          0%,
+          100% {
+            transform: translateX(0);
+          }
+          15% {
+            transform: translateX(-6px);
+          }
+          30% {
+            transform: translateX(6px);
+          }
+          45% {
+            transform: translateX(-5px);
+          }
+          60% {
+            transform: translateX(5px);
+          }
+          75% {
+            transform: translateX(-3px);
+          }
+          90% {
+            transform: translateX(3px);
+          }
+        }
+        .animate-shake {
+          animation: shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+        }
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(-8px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fade-in {
+          animation: fade-in 0.4s ease forwards;
+        }
+      `}</style>
     </div>
-  )
+  );
 }
