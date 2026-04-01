@@ -15,8 +15,8 @@ const GAMES = [
     gradient: "from-purple-500 to-indigo-500",
   },
   {
-    id: "crossclimb",
-    title: "Crossclimb",
+    id: "finalWord",
+    title: "Final Word",
     description: "Climb the ladder of words in this daily puzzle.",
     gradient: "from-emerald-400 to-teal-500",
   },

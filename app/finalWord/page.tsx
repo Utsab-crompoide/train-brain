@@ -1,14 +1,15 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useTheme } from "@/context/ThemeContext";
 import Image from "next/image";
 import SunIcon from "@/public/assets/sun-icon.svg";
 import MoonIcon from "@/public/assets/moon-icon.svg";
 import { useFinalWord } from "@/hooks/useFinalWord";
-import { getDailyPuzzle } from "@/data/finalWordPuzzles";
+import { PUZZLES, getDailyPuzzle } from "@/data/finalWordPuzzles";
 import type { RowState } from "@/hooks/useFinalWord";
 
-const PUZZLE = getDailyPuzzle();
+const DAILY_PUZZLE = getDailyPuzzle();
+const DAILY_INDEX = PUZZLES.findIndex((p) => p.id === DAILY_PUZZLE.id);
 
 interface CellProps {
   letter: string;
@@ -70,7 +71,10 @@ export default function FinalWord() {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
 
-  const { rows, activeRowIndex, finalUnlocked, puzzleSolved, submitFinalRow, isFinalRowFilled, rowRefs } = useFinalWord(PUZZLE);
+  const [puzzleIndex, setPuzzleIndex] = useState(DAILY_INDEX);
+  const puzzle = PUZZLES[puzzleIndex];
+
+  const { rows, activeRowIndex, finalUnlocked, puzzleSolved, submitFinalRow, isFinalRowFilled, rowRefs, focusRow } = useFinalWord(puzzle);
 
   useEffect(() => {
     rowRefs.current[activeRowIndex]?.scrollIntoView({
@@ -79,7 +83,6 @@ export default function FinalWord() {
     });
   }, [activeRowIndex, rowRefs]);
 
-  const activeRow = rows[activeRowIndex];
   const finalRowIndex = rows.length - 1;
 
   return (
@@ -101,17 +104,19 @@ export default function FinalWord() {
         {!puzzleSolved && (
           <div className={`w-full rounded-xl px-4 py-3 text-center text-sm font-medium transition-all duration-300 ${isDark ? "bg-gray-800 text-gray-200 border border-gray-700" : "bg-gray-50 text-gray-700 border border-gray-200"}`}>
             <span className={`text-xs uppercase tracking-widest font-bold ${isDark ? "text-gray-500" : "text-gray-400"}`}>Hint #{activeRowIndex + 1}</span>
-            <p className="mt-0.5">{activeRow?.hint}</p>
+            <p className="mt-0.5">{rows[activeRowIndex]?.hint}</p>
           </div>
         )}
-
-        {/* ── Win banner ───────────────────────────────────────────── */}
-        {puzzleSolved && <div className={`w-full rounded-xl px-4 py-4 text-center font-bold text-lg animate-fade-in ${isDark ? "bg-emerald-900 text-emerald-300 border border-emerald-700" : "bg-emerald-50 text-emerald-700 border border-emerald-300"}`}>🎉 Puzzle Solved! Great climb!</div>}
 
         {/* ── Game grid ────────────────────────────────────────────── */}
         <div className="flex flex-col gap-3 w-full items-center">
           {rows.map((row, ri) => {
             const isFinalRow = ri === finalRowIndex;
+            const isSelectable =
+              !isFinalRow &&
+              !puzzleSolved &&
+              row.status !== "correct" &&
+              rows[finalRowIndex].status !== "active";
 
             return (
               <div key={ri} className="flex flex-col items-center gap-1 w-full">
@@ -121,14 +126,20 @@ export default function FinalWord() {
                 {/* Lock label when final row is still locked */}
                 {isFinalRow && row.status === "locked" && <p className={`text-xs uppercase tracking-widest font-semibold mb-1 ${isDark ? "text-gray-600" : "text-gray-400"}`}>🔒 Solve all four to unlock</p>}
 
-                {/* Row cells */}
-                <Row
-                  row={row}
-                  isDark={isDark}
-                  divRef={(el) => {
-                    rowRefs.current[ri] = el;
-                  }}
-                />
+                {/* Row cells — clickable for regular rows */}
+                <div
+                  onClick={() => isSelectable && focusRow(ri)}
+                  className={isSelectable ? "cursor-pointer" : ""}
+                  title={isSelectable ? `Play row ${ri + 1}` : undefined}
+                >
+                  <Row
+                    row={row}
+                    isDark={isDark}
+                    divRef={(el) => {
+                      rowRefs.current[ri] = el;
+                    }}
+                  />
+                </div>
 
                 {/* Active row indicator dot (regular rows only) */}
                 {ri === activeRowIndex && !isFinalRow && !puzzleSolved && <span className={`w-1.5 h-1.5 rounded-full mt-0.5 ${isDark ? "bg-emerald-400" : "bg-emerald-500"}`} />}
@@ -170,6 +181,24 @@ export default function FinalWord() {
             />
           </div>
         </div>
+        {/* ── Win banner ───────────────────────────────────────────── */}
+        {puzzleSolved && (
+          <div className="flex flex-col items-center gap-3 w-full animate-fade-in">
+            <div className={`w-full rounded-xl px-4 py-4 text-center font-bold text-lg ${isDark ? "bg-emerald-900 text-emerald-300 border border-emerald-700" : "bg-emerald-50 text-emerald-700 border border-emerald-300"}`}>
+              🎉 Puzzle Solved! Great climb!
+            </div>
+            <button
+              onClick={() => setPuzzleIndex((i) => (i + 1) % PUZZLES.length)}
+              className={`px-8 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all duration-200 active:scale-95 ${
+                isDark
+                  ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/40"
+                  : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-200"
+              }`}
+            >
+              Next Puzzle →
+            </button>
+          </div>
+        )}
       </main>
 
       {/* ── Global animations ────────────────────────────────────── */}

@@ -143,18 +143,29 @@ export function useFinalWord(puzzle: Puzzle): FinalWordState & FinalWordActions 
           };
 
           if (isCorrect) {
-            const isLastRegular = activeRowIndex === TOTAL_ROWS - 2;
-            const nextRowIndex = isLastRegular ? TOTAL_ROWS - 1 : activeRowIndex + 1;
+            // Check if ALL regular rows are now solved (order-independent)
+            const allRegularSolved = updated
+              .slice(0, TOTAL_ROWS - 1)
+              .every((r) => r.status === "correct");
 
-            updated[nextRowIndex] = {
-              ...updated[nextRowIndex],
-              status: "active",
-            };
-
-            if (isLastRegular) {
+            if (allRegularSolved) {
+              // Unlock the final row
+              updated[TOTAL_ROWS - 1] = {
+                ...updated[TOTAL_ROWS - 1],
+                status: "active",
+              };
               setFinalUnlocked(true);
+              setActiveRowIndex(TOTAL_ROWS - 1);
+            } else {
+              // Move focus to the next unsolved regular row
+              const nextUnsolved = updated.findIndex(
+                (r, i) => i < TOTAL_ROWS - 1 && i !== activeRowIndex && r.status !== "correct",
+              );
+              if (nextUnsolved !== -1) {
+                updated[nextUnsolved] = { ...updated[nextUnsolved], status: "active" };
+                setActiveRowIndex(nextUnsolved);
+              }
             }
-            setActiveRowIndex(nextRowIndex);
           }
           // wrong case: shake + reset handled by the useEffect below
         }
@@ -228,10 +239,33 @@ export function useFinalWord(puzzle: Puzzle): FinalWordState & FinalWordActions 
   const focusRow = useCallback(
     (index: number) => {
       const row = rows[index];
+      // Cannot select the locked final row, or an already-correct row
       if (!row || row.status === "locked" || row.status === "correct") return;
+      // Cannot select a regular row once the final row is active
+      if (index < TOTAL_ROWS - 1 && rows[TOTAL_ROWS - 1].status === "active") return;
+      // Cannot switch away while the current row is shaking (wrong); let the reset finish first
+      if (index !== activeRowIndex && rows[activeRowIndex]?.status === "wrong") return;
+
+      setRows((prev) => {
+        const updated = [...prev];
+        // If the current active row is just "active" (not correct/wrong), revert to idle
+        const currentActive = prev[activeRowIndex];
+        if (
+          activeRowIndex !== index &&
+          currentActive &&
+          currentActive.status === "active"
+        ) {
+          updated[activeRowIndex] = { ...currentActive, status: "idle" };
+        }
+        // Make the target row active
+        if (updated[index].status === "idle") {
+          updated[index] = { ...updated[index], status: "active" };
+        }
+        return updated;
+      });
       setActiveRowIndex(index);
     },
-    [rows],
+    [rows, activeRowIndex],
   );
 
   // ── Keyboard listener (web-only convenience; ignored by React Native) ─────
