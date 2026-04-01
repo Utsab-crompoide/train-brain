@@ -169,7 +169,7 @@ export const PUZZLES: Puzzle[] = [
   {
     id: 23,
     answer: "SPORT",
-    acceptedAnswers: ["sport", "athletics", "competition", "game"],
+    acceptedAnswers: ["sport", "athletics", "competition", "game","sports"],
     words: ["Decathlon", "Pentathlon", "Triathlon", "Biathlon", "Heptathlon"],
     hint: "These are all multi-discipline competitive events.",
   },
