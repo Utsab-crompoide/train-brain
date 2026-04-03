@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { whoSaidItPuzzles, WhoSaidItPuzzle } from "@/data/whoSaidItPuzzles";
 
 export type GameStatus = "playing" | "correct" | "wrong-once" | "wrong-final";
@@ -42,7 +42,18 @@ function shuffleOptions(options: string[]): string[] {
   return arr;
 }
 
+function createShuffledPuzzleIndices(): number[] {
+  const indices = Array.from({ length: whoSaidItPuzzles.length }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}
+
 export function useWhoSaidIt(): UseWhoSaidItReturn {
+  const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
+  const [currentPositionInShuffle, setCurrentPositionInShuffle] = useState(0);
   const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [status, setStatus] = useState<GameStatus>("playing");
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
@@ -52,9 +63,29 @@ export function useWhoSaidIt(): UseWhoSaidItReturn {
   const [hintsUsed, setHintsUsed] = useState(0);
   const [streak, setStreak] = useState(0);
   const [shake, setShake] = useState(false);
-  const [shuffledOptions, setShuffledOptions] = useState<string[]>(() =>
-    shuffleOptions(sortedPuzzles[0].options)
-  );
+  const [shuffledOptions, setShuffledOptions] = useState<string[]>(() => shuffleOptions(sortedPuzzles[0].options));
+
+  // Initialize shuffled indices on first mount
+  useEffect(() => {
+    setShuffledIndices(createShuffledPuzzleIndices());
+  }, []);
+
+  // Update puzzle index based on shuffle position
+  useEffect(() => {
+    if (shuffledIndices.length > 0) {
+      setPuzzleIndex(shuffledIndices[currentPositionInShuffle]);
+    }
+  }, [shuffledIndices, currentPositionInShuffle]);
+
+  // Shuffle options when puzzle changes
+  useEffect(() => {
+    setShuffledOptions(shuffleOptions(sortedPuzzles[puzzleIndex].options));
+    setStatus("playing");
+    setSelectedOption(null);
+    setFirstWrongOption(null);
+    setFeedback(null);
+    setHintRevealed(false);
+  }, [puzzleIndex]);
 
   const puzzle = sortedPuzzles[puzzleIndex];
 
@@ -100,7 +131,7 @@ export function useWhoSaidIt(): UseWhoSaidItReturn {
         }
       }
     },
-    [status, puzzle, triggerShake]
+    [status, puzzle, triggerShake],
   );
 
   const useHint = useCallback(() => {
@@ -114,22 +145,22 @@ export function useWhoSaidIt(): UseWhoSaidItReturn {
   }, [hintRevealed, status, puzzle]);
 
   const nextPuzzle = useCallback(() => {
-    const next = puzzleIndex + 1;
-    if (next >= sortedPuzzles.length) return;
+    setCurrentPositionInShuffle((pos) => {
+      const nextPos = pos + 1;
+      if (nextPos >= whoSaidItPuzzles.length) {
+        setShuffledIndices(createShuffledPuzzleIndices());
+        return 0;
+      }
+      return nextPos;
+    });
+  }, []);
 
-    setPuzzleIndex(next);
-    setShuffledOptions(shuffleOptions(sortedPuzzles[next].options));
-    setStatus("playing");
-    setSelectedOption(null);
-    setFirstWrongOption(null);
-    setFeedback(null);
-    setHintRevealed(false);
-  }, [puzzleIndex]);
+  const allPuzzlesCompleted = currentPositionInShuffle === 0 && shuffledIndices.length > 0;
 
   return {
     puzzle,
     puzzleIndex,
-    totalPuzzles: sortedPuzzles.length,
+    totalPuzzles: whoSaidItPuzzles.length,
     status,
     selectedOption,
     firstWrongOption,

@@ -71,7 +71,21 @@ export default function FinalWord() {
   const { theme, toggleTheme } = useTheme();
   const isDark = theme === "dark";
 
-  const [puzzleIndex, setPuzzleIndex] = useState(DAILY_INDEX);
+  // Initialize randomized puzzle sequence
+  const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
+  const [currentPositionInShuffle, setCurrentPositionInShuffle] = useState(0);
+
+  useEffect(() => {
+    // Create shuffled indices on mount
+    const indices = Array.from({ length: PUZZLES.length }, (_, i) => i);
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
+    }
+    setShuffledIndices(indices);
+  }, []);
+
+  const puzzleIndex = shuffledIndices.length > 0 ? shuffledIndices[currentPositionInShuffle] : 0;
   const puzzle = PUZZLES[puzzleIndex];
 
   const { rows, activeRowIndex, finalUnlocked, puzzleSolved, submitFinalRow, isFinalRowFilled, rowRefs, focusRow } = useFinalWord(puzzle);
@@ -84,6 +98,22 @@ export default function FinalWord() {
   }, [activeRowIndex, rowRefs]);
 
   const finalRowIndex = rows.length - 1;
+
+  const handleNextPuzzle = () => {
+    const nextPos = currentPositionInShuffle + 1;
+    if (nextPos >= PUZZLES.length) {
+      // All puzzles completed, restart with new shuffle
+      const indices = Array.from({ length: PUZZLES.length }, (_, i) => i);
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+      setShuffledIndices(indices);
+      setCurrentPositionInShuffle(0);
+    } else {
+      setCurrentPositionInShuffle(nextPos);
+    }
+  };
 
   return (
     <div className={`flex min-h-screen flex-col items-center font-sans transition-colors duration-300 ${isDark ? "bg-gray-950" : "bg-white"}`}>
@@ -112,11 +142,7 @@ export default function FinalWord() {
         <div className="flex flex-col gap-3 w-full items-center">
           {rows.map((row, ri) => {
             const isFinalRow = ri === finalRowIndex;
-            const isSelectable =
-              !isFinalRow &&
-              !puzzleSolved &&
-              row.status !== "correct" &&
-              rows[finalRowIndex].status !== "active";
+            const isSelectable = !isFinalRow && !puzzleSolved && row.status !== "correct" && rows[finalRowIndex].status !== "active";
 
             return (
               <div key={ri} className="flex flex-col items-center gap-1 w-full">
@@ -127,11 +153,7 @@ export default function FinalWord() {
                 {isFinalRow && row.status === "locked" && <p className={`text-xs uppercase tracking-widest font-semibold mb-1 ${isDark ? "text-gray-600" : "text-gray-400"}`}>🔒 Solve all four to unlock</p>}
 
                 {/* Row cells — clickable for regular rows */}
-                <div
-                  onClick={() => isSelectable && focusRow(ri)}
-                  className={isSelectable ? "cursor-pointer" : ""}
-                  title={isSelectable ? `Play row ${ri + 1}` : undefined}
-                >
+                <div onClick={() => isSelectable && focusRow(ri)} className={isSelectable ? "cursor-pointer" : ""} title={isSelectable ? `Play row ${ri + 1}` : undefined}>
                   <Row
                     row={row}
                     isDark={isDark}
@@ -184,15 +206,11 @@ export default function FinalWord() {
         {/* ── Win banner ───────────────────────────────────────────── */}
         {puzzleSolved && (
           <div className="flex flex-col items-center gap-3 w-full animate-fade-in">
-            <div className={`w-full rounded-xl px-4 py-4 text-center font-bold text-lg ${isDark ? "bg-emerald-900 text-emerald-300 border border-emerald-700" : "bg-emerald-50 text-emerald-700 border border-emerald-300"}`}>
-              🎉 Puzzle Solved! Great climb!
-            </div>
+            <div className={`w-full rounded-xl px-4 py-4 text-center font-bold text-lg ${isDark ? "bg-emerald-900 text-emerald-300 border border-emerald-700" : "bg-emerald-50 text-emerald-700 border border-emerald-300"}`}>🎉 Puzzle Solved! Great climb!</div>
             <button
-              onClick={() => setPuzzleIndex((i) => (i + 1) % PUZZLES.length)}
+              onClick={handleNextPuzzle}
               className={`px-8 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all duration-200 active:scale-95 ${
-                isDark
-                  ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/40"
-                  : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-200"
+                isDark ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/40" : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-200"
               }`}
             >
               Next Puzzle →

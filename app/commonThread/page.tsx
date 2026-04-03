@@ -102,6 +102,25 @@ export default function CommonThreadPage() {
         <div className="mb-8">
           <h1 className={`text-4xl font-extrabold tracking-tight sm:text-5xl ${isDark ? "text-white" : "text-gray-900"}`}>Common Thread</h1>
           <p className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>What links these words?</p>
+          <div className="flex items-center gap-2 mt-3 flex-wrap">
+            <span
+              className={`inline-block px-3 py-1 rounded-full text-xs font-semibold uppercase ${
+                game.puzzle.difficulty === "easy"
+                  ? isDark
+                    ? "bg-green-900/30 text-green-400 border border-green-700"
+                    : "bg-green-50 text-green-700 border border-green-200"
+                  : game.puzzle.difficulty === "medium"
+                    ? isDark
+                      ? "bg-yellow-900/30 text-yellow-400 border border-yellow-700"
+                      : "bg-yellow-50 text-yellow-700 border border-yellow-200"
+                    : isDark
+                      ? "bg-red-900/30 text-red-400 border border-red-700"
+                      : "bg-red-50 text-red-700 border border-red-200"
+              }`}
+            >
+              {game.puzzle.difficulty === "easy" ? "🟢 Easy" : game.puzzle.difficulty === "medium" ? "🟡 Medium" : "🔴 Hard"}
+            </span>
+          </div>
         </div>
 
         <div className="mb-6">

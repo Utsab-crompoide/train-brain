@@ -19,7 +19,6 @@ export interface UseLiarReturn {
   feedback: Feedback | null;
   hintsUsed: number;
   hintRevealed: boolean; // whether the one available hint is used
-  score: number;
   streak: number;
   select: (index: number) => void;
   useHint: () => void;
@@ -37,6 +36,16 @@ const sortedPuzzles = [...liarPuzzles].sort((a, b) => {
   return order[a.difficulty] - order[b.difficulty];
 });
 
+// Helper to create a shuffled array of puzzle indices
+function createShuffledPuzzleIndices(): number[] {
+  const indices = Array.from({ length: sortedPuzzles.length }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}
+
 // Shuffle statements and remap lieIndex so the lie isn't always in the same position
 function shufflePuzzle(puzzle: LiarPuzzle): LiarPuzzle {
   const indices = [0, 1, 2];
@@ -51,22 +60,40 @@ function shufflePuzzle(puzzle: LiarPuzzle): LiarPuzzle {
 }
 
 export function useTheLiar(): UseLiarReturn {
+  const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
+  const [currentPositionInShuffle, setCurrentPositionInShuffle] = useState(0);
   const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [status, setStatus] = useState<GameStatus>("playing");
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [hintsUsed, setHintsUsed] = useState(0);
   const [hintRevealed, setHintRevealed] = useState(false);
-  const [score, setScore] = useState(0);
   const [streak, setStreak] = useState(0);
   const [shake, setShake] = useState(false);
-  // Start with the unshuffled puzzle so server and client render identically,
-  // then shuffle on the client after mount to avoid hydration mismatch.
   const [shuffledPuzzle, setShuffledPuzzle] = useState<LiarPuzzle>(sortedPuzzles[0]);
 
+  // Initialize shuffled indices on first mount
   useEffect(() => {
-    setShuffledPuzzle(shufflePuzzle(sortedPuzzles[0]));
+    setShuffledIndices(createShuffledPuzzleIndices());
   }, []);
+
+  // Update puzzle index based on shuffle position
+  useEffect(() => {
+    if (shuffledIndices.length > 0) {
+      setPuzzleIndex(shuffledIndices[currentPositionInShuffle]);
+    }
+  }, [shuffledIndices, currentPositionInShuffle]);
+
+  // Shuffle the puzzle when it changes
+  useEffect(() => {
+    const p = sortedPuzzles[puzzleIndex];
+    setShuffledPuzzle(shufflePuzzle(p));
+    setStatus("playing");
+    setSelectedIndex(null);
+    setFeedback(null);
+    setHintsUsed(0);
+    setHintRevealed(false);
+  }, [puzzleIndex]);
 
   const puzzle = shuffledPuzzle;
 
@@ -84,7 +111,6 @@ export function useTheLiar(): UseLiarReturn {
       if (index === puzzle.lieIndex) {
         // Correct
         const points = hintRevealed ? POINTS.correctWithHint : POINTS.correctNoHint;
-        setScore((s) => s + points);
         setStreak((s) => s + 1);
         setStatus("correct");
         setFeedback({
@@ -102,7 +128,7 @@ export function useTheLiar(): UseLiarReturn {
         });
       }
     },
-    [status, puzzle, hintRevealed, triggerShake]
+    [status, puzzle, hintRevealed, triggerShake],
   );
 
   const useHint = useCallback(() => {
@@ -116,27 +142,27 @@ export function useTheLiar(): UseLiarReturn {
   }, [hintRevealed, status]);
 
   const nextPuzzle = useCallback(() => {
-    const next = puzzleIndex + 1;
-    if (next >= sortedPuzzles.length) return;
+    setCurrentPositionInShuffle((pos) => {
+      const nextPos = pos + 1;
+      if (nextPos >= liarPuzzles.length) {
+        setShuffledIndices(createShuffledPuzzleIndices());
+        return 0;
+      }
+      return nextPos;
+    });
+  }, []);
 
-    setPuzzleIndex(next);
-    setShuffledPuzzle(shufflePuzzle(sortedPuzzles[next]));
-    setStatus("playing");
-    setSelectedIndex(null);
-    setFeedback(null);
-    setHintRevealed(false);
-  }, [puzzleIndex]);
+  const allPuzzlesCompleted = currentPositionInShuffle === 0 && shuffledIndices.length > 0;
 
   return {
     puzzle,
     puzzleIndex,
-    totalPuzzles: sortedPuzzles.length,
+    totalPuzzles: liarPuzzles.length,
     status,
     selectedIndex,
     feedback,
     hintsUsed,
     hintRevealed,
-    score,
     streak,
     select,
     useHint,

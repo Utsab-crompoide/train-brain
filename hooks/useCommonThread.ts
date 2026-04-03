@@ -17,6 +17,16 @@ import { PUZZLES, type Puzzle } from "../data/puzzle";
 
 export const INITIAL_WORDS_SHOWN = 1;
 
+// Helper to create a shuffled array of puzzle indices
+function createShuffledPuzzleIndices(): number[] {
+  const indices = Array.from({ length: PUZZLES.length }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
+  return indices;
+}
+
 export type GameStatus = "playing" | "won" | "lost";
 export type FeedbackType = "success" | "error" | "info" | "showHint";
 
@@ -74,6 +84,8 @@ export interface CommonThreadActions {
 }
 
 export function useCommonThread(): CommonThreadState & CommonThreadActions {
+  const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
+  const [currentPositionInShuffle, setCurrentPositionInShuffle] = useState(0);
   const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [puzzle, setPuzzle] = useState<Puzzle>(PUZZLES[0]);
   const [revealedCount, setRevealedCount] = useState(INITIAL_WORDS_SHOWN);
@@ -84,6 +96,18 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
   const [status, setStatus] = useState<GameStatus>("playing");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [shake, setShake] = useState(false);
+
+  // Initialize shuffled indices on first mount
+  useEffect(() => {
+    setShuffledIndices(createShuffledPuzzleIndices());
+  }, []);
+
+  // Update puzzle index based on shuffle position
+  useEffect(() => {
+    if (shuffledIndices.length > 0) {
+      setPuzzleIndex(shuffledIndices[currentPositionInShuffle]);
+    }
+  }, [shuffledIndices, currentPositionInShuffle]);
 
   useEffect(() => {
     const p = PUZZLES[puzzleIndex];
@@ -170,7 +194,15 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
   }, [status, hintsRevealed, puzzle]);
 
   const nextPuzzle = useCallback(() => {
-    setPuzzleIndex((i) => (i + 1) % PUZZLES.length);
+    setCurrentPositionInShuffle((pos) => {
+      const nextPos = pos + 1;
+      if (nextPos >= PUZZLES.length) {
+        // All puzzles completed, restart with new shuffle
+        setShuffledIndices(createShuffledPuzzleIndices());
+        return 0;
+      }
+      return nextPos;
+    });
   }, []);
 
   const resetPuzzle = useCallback(() => {
