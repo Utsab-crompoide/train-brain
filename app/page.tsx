@@ -26,6 +26,12 @@ const GAMES = [
     description: "Identify the lie among the statements.",
     gradient: "from-orange-400 to-red-500",
   },
+  {
+    id: "whoSaidIt",
+    title: "Who Said It?",
+    description: "Guess who said what.",
+    gradient: "from-blue-400 to-cyan-500",
+  },
 ];
 
 export default function Home() {
