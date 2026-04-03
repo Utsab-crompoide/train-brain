@@ -185,7 +185,7 @@ export const whoSaidItPuzzles: WhoSaidItPuzzle[] = [
     options: ["Abraham Lincoln", "Mark Twain", "Oscar Wilde", "James A. Garfield"],
     difficulty: "hard",
     category: "Politics",
-    hint: "He was the 20th President of the United States and served briefly before being assassinated.",
+    hint: "He was the 20th President of the United States.",
   },
   {
     id: 20,
@@ -195,5 +195,14 @@ export const whoSaidItPuzzles: WhoSaidItPuzzle[] = [
     difficulty: "hard",
     category: "Literature",
     hint: "An American poet known for 'The Road Not Taken'.",
+  },
+  {
+    id: 21,
+    quote: "The secret of change is to focus all your energy not on fighting the old, but on building the new.",
+    answer: "Socrates",
+    options: ["Aristotle", "Socrates", "Plato", "Marcus Aurelius"],
+    difficulty: "hard",
+    category: "Philosophy",
+    hint: "An ancient Greek philosopher who never wrote anything down himself.",
   },
 ];

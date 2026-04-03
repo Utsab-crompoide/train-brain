@@ -126,14 +126,14 @@ function OptionCard({
       : "border-red-400 bg-red-50 cursor-default",
     disabled: isDark
       ? "border-gray-800 bg-gray-900/20 opacity-40 cursor-default"
-      : "border-gray-100 bg-gray-50/30 opacity-40 cursor-default",
+      : "border-gray-300 bg-gray-100 opacity-60 cursor-default",
   };
 
   const textClass: Record<OptionState, string> = {
     idle: isDark ? "text-gray-200" : "text-gray-800",
     correct: isDark ? "text-emerald-300" : "text-emerald-700",
     wrong: isDark ? "text-red-300" : "text-red-700",
-    disabled: isDark ? "text-gray-600" : "text-gray-400",
+    disabled: isDark ? "text-gray-600" : "text-gray-500",
   };
 
   const icon: Record<OptionState, string | null> = {
