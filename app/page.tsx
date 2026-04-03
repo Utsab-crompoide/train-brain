@@ -12,25 +12,25 @@ const GAMES = [
     id: "commonThread",
     title: "Common Thread",
     description: "Guess the common category from clues.",
-    gradient: "from-purple-500 to-indigo-500",
+    image: "/assets/commonThread.png",
   },
   {
     id: "finalWord",
     title: "Final Word",
     description: "Climb the ladder of words in this daily puzzle.",
-    gradient: "from-emerald-400 to-teal-500",
+    image: "/assets/finalWord.png",
   },
   {
     id: "theLiar",
     title: "The Liar",
     description: "Identify the lie among the statements.",
-    gradient: "from-orange-400 to-red-500",
+    image: "/assets/theLiar.png",
   },
   {
     id: "whoSaidIt",
     title: "Who Said It?",
     description: "Guess who said what.",
-    gradient: "from-blue-400 to-cyan-500",
+    image: "/assets/whoSaidIt.png",
   },
 ];
 
@@ -50,17 +50,27 @@ export default function Home() {
       </button>
 
       <main className="flex w-full max-w-5xl flex-col items-center px-6 py-24 sm:px-12">
-        <h1 className="mb-16 text-6xl font-extrabold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-pink-500 via-orange-400 to-yellow-500 sm:text-7xl">Games</h1>
+        <h1 className={`mb-16 text-6xl font-extrabold tracking-tight sm:text-7xl ${isDark ? "text-gray-100" : "text-gray-900"}`}>Games</h1>
 
         <div className="grid w-full grid-cols-1 gap-8 sm:grid-cols-2">
-          {GAMES.map((game) => (
-            <div key={game.id} className={`flex flex-col justify-between rounded-3xl p-8 shadow-xl transition-transform hover:-translate-y-2 cursor-pointer bg-linear-to-br ${game.gradient}`}>
-              <div>
-                <h2 className="mb-4 text-3xl font-bold text-white">{game.title}</h2>
-                <p className="text-lg font-medium text-white/90">{game.description}</p>
-              </div>
-              <div className="mt-8 flex justify-end" onClick={() => router.push(`/${game.id}`)}>
-                <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-bold text-white backdrop-blur-md">Play Now</span>
+          {GAMES.map((game, index) => (
+            <div key={game.id} className="relative overflow-hidden rounded-3xl shadow-xl transition-transform hover:-translate-y-2 cursor-pointer h-60 sm:h-80 group" onClick={() => router.push(`/${game.id}`)}>
+              {/* Background Image */}
+              <Image src={game.image} alt={game.title} fill className="object-cover object-center transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" loading={index === 0 ? "eager" : "lazy"} priority={index === 0} />
+
+              {/* Dark Overlay */}
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-all duration-300"></div>
+
+              {/* Content - Bottom Position */}
+              <div className="absolute inset-0 flex flex-col justify-between p-8">
+                <div></div>
+                <div>
+                  {/* <h2 className="mb-3 text-3xl font-bold text-white drop-shadow-lg">{game.title}</h2> */}
+                  {/* <p className="text-base font-medium text-white/90 drop-shadow-md mb-6">{game.description}</p> */}
+                  <div className="flex justify-start">
+                    <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-bold text-white backdrop-blur-md hover:bg-white/30 transition-colors duration-300">Play Now</span>
+                  </div>
+                </div>
               </div>
             </div>
           ))}
