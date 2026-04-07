@@ -12,25 +12,25 @@ const GAMES = [
     id: "commonThread",
     title: "Common Thread",
     description: "Guess the common category from clues.",
-    image: "/assets/commonThread.png",
+    image: "/train-brain/assets/commonThread.png",
   },
   {
     id: "finalWord",
     title: "Final Word",
     description: "Climb the ladder of words in this daily puzzle.",
-    image: "/assets/finalWord.png",
+    image: "/train-brain/assets/finalWord.png",
   },
   {
     id: "theLiar",
     title: "The Liar",
     description: "Identify the lie among the statements.",
-    image: "/assets/theLiar.png",
+    image: "/train-brain/assets/theLiar.png",
   },
   {
     id: "whoSaidIt",
     title: "Who Said It?",
     description: "Guess who said what.",
-    image: "/assets/whoSaidIt.png",
+    image: "/train-brain/assets/whoSaidIt.png",
   },
 ];
 
@@ -60,7 +60,6 @@ export default function Home() {
 
               {/* Dark Overlay */}
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-all duration-300"></div>
-
             </div>
           ))}
         </div>
