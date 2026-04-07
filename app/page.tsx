@@ -7,30 +7,32 @@ import Image from "next/image";
 import SunIcon from "@/public/assets/sun-icon.svg";
 import MoonIcon from "@/public/assets/moon-icon.svg";
 
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+
 const GAMES = [
   {
     id: "commonThread",
     title: "Common Thread",
     description: "Guess the common category from clues.",
-    image: "/assets/commonThread.png",
+    image: `${basePath}/assets/commonThread.png`,
   },
   {
     id: "finalWord",
     title: "Final Word",
     description: "Climb the ladder of words in this daily puzzle.",
-    image: "/assets/finalWord.png",
+    image: `${basePath}/assets/finalWord.png`,
   },
   {
     id: "theLiar",
     title: "The Liar",
     description: "Identify the lie among the statements.",
-    image: "/assets/theLiar.png",
+    image: `${basePath}/assets/theLiar.png`,
   },
   {
     id: "whoSaidIt",
     title: "Who Said It?",
     description: "Guess who said what.",
-    image: "/assets/whoSaidIt.png",
+    image: `${basePath}/assets/whoSaidIt.png`,
   },
 ];
 
