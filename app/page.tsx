@@ -59,19 +59,8 @@ export default function Home() {
               <Image src={game.image} alt={game.title} fill className="object-cover object-center transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" loading={index === 0 ? "eager" : "lazy"} priority={index === 0} />
 
               {/* Dark Overlay */}
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-black/50 transition-all duration-300"></div>
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-all duration-300"></div>
 
-              {/* Content - Bottom Position */}
-              <div className="absolute inset-0 flex flex-col justify-between p-8">
-                <div></div>
-                <div>
-                  {/* <h2 className="mb-3 text-3xl font-bold text-white drop-shadow-lg">{game.title}</h2> */}
-                  {/* <p className="text-base font-medium text-white/90 drop-shadow-md mb-6">{game.description}</p> */}
-                  <div className="flex justify-start">
-                    <span className="rounded-full bg-white/20 px-4 py-2 text-sm font-bold text-white backdrop-blur-md hover:bg-white/30 transition-colors duration-300">Play Now</span>
-                  </div>
-                </div>
-              </div>
             </div>
           ))}
         </div>
