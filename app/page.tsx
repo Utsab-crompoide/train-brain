@@ -12,25 +12,25 @@ const GAMES = [
     id: "commonThread",
     title: "Common Thread",
     description: "Guess the common category from clues.",
-    image: "/train-brain/assets/commonThread.png",
+    image: "/assets/commonThread.png",
   },
   {
     id: "finalWord",
     title: "Final Word",
     description: "Climb the ladder of words in this daily puzzle.",
-    image: "/train-brain/assets/finalWord.png",
+    image: "/assets/finalWord.png",
   },
   {
     id: "theLiar",
     title: "The Liar",
     description: "Identify the lie among the statements.",
-    image: "/train-brain/assets/theLiar.png",
+    image: "/assets/theLiar.png",
   },
   {
     id: "whoSaidIt",
     title: "Who Said It?",
     description: "Guess who said what.",
-    image: "/train-brain/assets/whoSaidIt.png",
+    image: "/assets/whoSaidIt.png",
   },
 ];
 
