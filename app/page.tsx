@@ -56,8 +56,8 @@ export default function Home() {
           {GAMES.map((game, index) => (
             <div key={game.id} className="relative overflow-hidden rounded-3xl shadow-xl transition-transform hover:-translate-y-2 cursor-pointer h-60 sm:h-80 group" onClick={() => router.push(`/${game.id}`)}>
               {/* Background Image */}
-              <Image src={game.image} alt={game.title} fill className="object-cover object-center transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" loading={index === 0 ? "eager" : "lazy"} priority={index === 0} />
-
+              {/* <Image src={game.image} alt={game.title} fill className="object-cover object-center transition-transform duration-300 group-hover:scale-105" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" loading={index === 0 ? "eager" : "lazy"} priority={index === 0} /> */}
+              <img src={game.image} alt={game.title} className="object-cover object-center transition-transform duration-300 group-hover:scale-105" loading={index === 0 ? "eager" : "lazy"} />
               {/* Dark Overlay */}
               <div className="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-all duration-300"></div>
             </div>
