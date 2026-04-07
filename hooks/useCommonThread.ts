@@ -55,6 +55,9 @@ export interface CommonThreadState {
   /** Number of wrong guesses so far */
   wrongGuesses: number;
 
+  /** List of wrong guess strings in order */
+  wrongGuessList: string[];
+
   /** Overall game status */
   status: GameStatus;
 
@@ -93,6 +96,7 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
   const [hintsRevealed, setHintsRevealed] = useState(0);
   const [guess, setGuess] = useState("");
   const [wrongGuesses, setWrongGuesses] = useState(0);
+  const [wrongGuessList, setWrongGuessList] = useState<string[]>([]);
   const [status, setStatus] = useState<GameStatus>("playing");
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [shake, setShake] = useState(false);
@@ -117,6 +121,7 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
     setHintsRevealed(0);
     setGuess("");
     setWrongGuesses(0);
+    setWrongGuessList([]);
     setStatus("playing");
     setFeedback(null);
     setShake(false);
@@ -154,6 +159,7 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
         setNewlyRevealedIndex(revealedCount);
         setRevealedCount(nextRevealed);
         setWrongGuesses((w) => w + 1);
+        setWrongGuessList((list) => [...list, normalised]);
 
         if (nextRevealed >= puzzle.words.length) {
           setFeedback({
@@ -213,6 +219,7 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
     setHintsRevealed(0);
     setGuess("");
     setWrongGuesses(0);
+    setWrongGuessList([]);
     setStatus("playing");
     setFeedback(null);
     setShake(false);
@@ -232,6 +239,7 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
     hintsRevealed,
     guess,
     wrongGuesses,
+    wrongGuessList,
     status,
     feedback,
     shake,

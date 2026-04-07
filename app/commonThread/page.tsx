@@ -88,6 +88,8 @@ export default function CommonThreadPage() {
 
   const canHint = !game.allHintsRevealed && game.status === "playing";
 
+  console.log('AAAA',game.wrongGuessList)
+
   return (
     <div className={`flex min-h-screen flex-col items-center font-sans transition-colors duration-300 ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
       <button
@@ -161,6 +163,16 @@ export default function CommonThreadPage() {
           >
             {game.feedback.text} <br />
             {game.feedback.type === "showHint" && <span>Hint: {game.puzzle.hint}</span>}
+          </div>
+        )}
+
+        {game.wrongGuessList.length > 0 && (
+          <div className="mb-6 flex flex-row items-center gap-3">
+            {game.wrongGuessList.map((guess, i) => (
+              <div key={i} className={`rounded-xl px-4 py-3 text-sm font-medium border line-through ${isDark ? "bg-red-900/40 text-red-300 border-red-800" : "bg-red-50 text-red-600 border-red-200"}`}>
+                {guess}
+              </div>
+            ))}
           </div>
         )}
 

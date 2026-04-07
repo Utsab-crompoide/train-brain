@@ -152,22 +152,6 @@ export default function TheLiarPage() {
           <p className={`mt-2 text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>Two truths, one lie. Spot the liar.</p>
         </div>
 
-        {/* Score + Streak row */}
-        {/* <div className="flex items-center justify-between mb-6">
-          <p className={`text-sm font-semibold ${isDark ? "text-gray-400" : "text-gray-500"}`}>
-            Score: <span className={`text-base font-extrabold ${isDark ? "text-white" : "text-gray-900"}`}>{game.score}</span>
-          </p>
-          <StreakBadge streak={game.streak} isDark={isDark} />
-        </div> */}
-
-        {/* Progress */}
-        {/* <div className="mb-6">
-          <p className={`mb-2 text-xs text-center tracking-widest uppercase ${isDark ? "text-gray-500" : "text-gray-400"}`}>
-            Puzzle {game.puzzleIndex + 1} of {game.totalPuzzles}
-          </p>
-          <ProgressDots total={game.totalPuzzles} current={game.puzzleIndex} isDark={isDark} />
-        </div> */}
-
         {/* Topic card */}
         <div className={`mb-5 rounded-2xl px-5 py-4 border flex items-center justify-between ${isDark ? "bg-gray-900/60 border-gray-800" : "bg-white border-gray-200 shadow-sm"}`}>
           <div>
@@ -223,7 +207,7 @@ export default function TheLiarPage() {
             }`}
           >
             <Image src={HintIcon} alt="Hint" width={16} height={16} className="w-4 h-4 shrink-0" style={{ filter: isDark ? "invert(1)" : "invert(0.4)" }} />
-            {game.hintRevealed ? "Hint used" : "Reveal a safe statement (−50pts)"}
+            {game.hintRevealed ? "Hint used" : "Reveal a safe statement"}
           </button>
         ) : (
           <button onClick={game.nextPuzzle} disabled={isLastPuzzle} className="w-full rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-4 text-sm tracking-wide transition-all duration-200 active:scale-95">
