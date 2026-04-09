@@ -363,7 +363,7 @@ export const PUZZLES: Puzzle[] = [
     id: 44,
     answer: "NETWORK",
     acceptedAnswers: ["network", "connection", "system", "web"],
-    words: ["Router", "Protocol", "Bandwidth", "Bandwidth", "Latency"],
+    words: ["Router", "Protocol", "Bandwidth", "Wireless", "Latency"],
     hint: "These terms describe how computers communicate.",
     difficulty: "hard",
   },

@@ -88,8 +88,6 @@ export default function CommonThreadPage() {
 
   const canHint = !game.allHintsRevealed && game.status === "playing";
 
-  console.log('AAAA',game.wrongGuessList)
-
   return (
     <div className={`flex min-h-screen flex-col items-center font-sans transition-colors duration-300 ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
       <button
