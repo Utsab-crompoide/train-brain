@@ -215,6 +215,22 @@ export function useFinalWord(puzzle: Puzzle): FinalWordState & FinalWordActions 
     });
   }, []);
 
+    // ── Keyboard listener (web-only convenience; ignored by React Native) ─────
+    useEffect(() => {
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+  
+        if (e.key === "Backspace") {
+          deleteLetter();
+        } else if (/^[a-zA-Z]$/.test(e.key)) {
+          typeLetter(e.key);
+        }
+      };
+  
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [typeLetter, deleteLetter]);
+
   // Reset "wrong" status back to "active" after the shake animation completes
   useEffect(() => {
     const wrongRow = rows[activeRowIndex];
