@@ -5,7 +5,6 @@ import Image from "next/image";
 import SunIcon from "@/public/assets/sun-icon.svg";
 import MoonIcon from "@/public/assets/moon-icon.svg";
 import { useFinalWord } from "@/hooks/useFinalWord";
-import { useShowOnScreenKeyboard } from "@/hooks/useShowOnScreenKeyboard";
 import { PUZZLES, getDailyPuzzle } from "@/data/finalWordPuzzles";
 import type { RowState } from "@/hooks/useFinalWord";
 
@@ -68,49 +67,6 @@ function Row({ row, isDark, divRef }: RowProps) {
   );
 }
 
-const KEYBOARD_ROWS = [
-  ["Q", "W", "E", "R", "T", "Y", "U", "I", "O", "P"],
-  ["A", "S", "D", "F", "G", "H", "J", "K", "L"],
-  ["Z", "X", "C", "V", "B", "N", "M"],
-] as const;
-
-interface OnScreenLetterKeyboardProps {
-  isDark: boolean;
-  disabled: boolean;
-  onKey: (letter: string) => void;
-  onBackspace: () => void;
-}
-
-function OnScreenLetterKeyboard({ isDark, disabled, onKey, onBackspace }: OnScreenLetterKeyboardProps) {
-  const keyClass = `flex-1 min-w-0 h-11 sm:h-12 rounded-lg text-sm font-bold uppercase active:scale-95 transition-transform touch-manipulation ${
-    isDark ? "bg-gray-800 border border-gray-700 text-white" : "bg-gray-100 border border-gray-300 text-gray-900"
-  } ${disabled ? "opacity-40 pointer-events-none" : ""}`;
-
-  return (
-    <div
-      className={`w-full max-w-lg mx-auto px-2 pt-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] border-t ${
-        isDark ? "border-gray-800 bg-gray-950/95 backdrop-blur-sm" : "border-gray-200 bg-white/95 backdrop-blur-sm"
-      }`}
-      role="group"
-      aria-label="Letter keyboard"
-    >
-      {KEYBOARD_ROWS.map((row, ri) => (
-        <div key={ri} className="flex justify-center gap-1 mb-1.5 max-w-full">
-          {row.map((ch) => (
-            <button key={ch} type="button" className={`${keyClass} basis-0`} onClick={() => onKey(ch)} disabled={disabled}>
-              {ch}
-            </button>
-          ))}
-          {ri === 2 && (
-            <button type="button" className={`${keyClass} shrink-0 basis-14`} onClick={onBackspace} disabled={disabled} aria-label="Backspace">
-              ⌫
-            </button>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function FinalWord() {
   const { theme, toggleTheme } = useTheme();
@@ -133,12 +89,8 @@ export default function FinalWord() {
   const puzzleIndex = shuffledIndices.length > 0 ? shuffledIndices[currentPositionInShuffle] : 0;
   const puzzle = PUZZLES[puzzleIndex];
 
-  const showOnScreenKeyboard = useShowOnScreenKeyboard();
   const { rows, activeRowIndex, finalUnlocked, puzzleSolved, submitFinalRow, isFinalRowFilled, rowRefs, focusRow, typeLetter, deleteLetter } =
     useFinalWord(puzzle);
-
-  const activeRow = rows[activeRowIndex];
-  const keyboardEnabled = Boolean(activeRow && activeRow.status === "active");
 
   useEffect(() => {
     rowRefs.current[activeRowIndex]?.scrollIntoView({
@@ -175,7 +127,7 @@ export default function FinalWord() {
         {isDark ? <Image src={MoonIcon} alt="Dark mode" width={20} height={20} /> : <Image src={SunIcon} alt="Light mode" width={20} height={20} />}
       </button>
 
-      <main className={`flex w-full max-w-lg flex-col items-center px-4 pt-16 gap-6 ${showOnScreenKeyboard && !puzzleSolved ? "pb-52" : "pb-6"}`}>
+      <main className={`flex w-full max-w-lg flex-col items-center px-4 pt-16 gap-6 pb-6`}>
         <div className="text-center">
           <h1 className={`text-4xl font-extrabold tracking-tight sm:text-5xl ${isDark ? "text-white" : "text-gray-900"}`}>The Final Word</h1>
           <p className={`mt-1 text-sm ${isDark ? "text-gray-500" : "text-gray-400"}`}>Solve each word, unlock the last.</p>
@@ -203,14 +155,61 @@ export default function FinalWord() {
                 {isFinalRow && row.status === "locked" && <p className={`text-xs uppercase tracking-widest font-semibold mb-1 ${isDark ? "text-gray-600" : "text-gray-400"}`}>🔒 Solve all four to unlock</p>}
 
                 {/* Row cells — clickable for regular rows */}
-                <div onClick={() => isSelectable && focusRow(ri)} className={isSelectable ? "cursor-pointer" : ""} title={isSelectable ? `Play row ${ri + 1}` : undefined}>
-                  <Row
-                    row={row}
-                    isDark={isDark}
-                    divRef={(el) => {
-                      rowRefs.current[ri] = el;
-                    }}
-                  />
+                <div className={`relative ${isSelectable || ri === activeRowIndex ? "cursor-pointer" : ""}`}>
+                  {(isSelectable || ri === activeRowIndex) && !puzzleSolved && (
+                    <input
+                      type="text"
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 text-[16px] focus:outline-none"
+                      value={" " + row.letters.join("")}
+                      onFocus={(e) => {
+                        if (isSelectable && ri !== activeRowIndex) {
+                          focusRow(ri);
+                        }
+                        const len = e.currentTarget.value.length;
+                        e.currentTarget.setSelectionRange(len, len);
+                      }}
+                      onClick={(e) => {
+                        const len = e.currentTarget.value.length;
+                        e.currentTarget.setSelectionRange(len, len);
+                      }}
+                      onChange={(e) => {
+                        const newValue = e.target.value.toUpperCase();
+                        const currentValue = " " + row.letters.join("");
+
+                        if (newValue.length < currentValue.length) {
+                          const times = currentValue.length - newValue.length;
+                          for (let i = 0; i < times; i++) deleteLetter();
+                        } else if (newValue.length > currentValue.length) {
+                          const added = newValue.slice(currentValue.length);
+                          for (const char of added) {
+                            if (/^[A-Z]$/.test(char)) {
+                              typeLetter(char);
+                            }
+                          }
+                        }
+                      }}
+                      onKeyDown={(e) => {
+                        e.stopPropagation();
+                        if (e.key === "Backspace" && e.currentTarget.value.length <= 1) {
+                          deleteLetter();
+                        }
+                      }}
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="characters"
+                      spellCheck="false"
+                      title={isSelectable ? `Play row ${ri + 1}` : undefined}
+                    />
+                  )}
+                  <div title={isSelectable ? `Play row ${ri + 1}` : undefined}>
+                    <Row
+                      row={row}
+                      isDark={isDark}
+                      divRef={(el) => {
+                        rowRefs.current[ri] = el;
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {/* Active row indicator dot (regular rows only) */}
@@ -269,18 +268,7 @@ export default function FinalWord() {
         )}
       </main>
 
-      {showOnScreenKeyboard && !puzzleSolved && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 flex justify-center pointer-events-none">
-          <div className="pointer-events-auto w-full max-w-lg">
-            <OnScreenLetterKeyboard
-              isDark={isDark}
-              disabled={!keyboardEnabled}
-              onKey={typeLetter}
-              onBackspace={deleteLetter}
-            />
-          </div>
-        </div>
-      )}
+
 
       {/* ── Global animations ────────────────────────────────────── */}
       <style jsx global>{`
