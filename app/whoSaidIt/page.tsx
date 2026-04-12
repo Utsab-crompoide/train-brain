@@ -86,7 +86,7 @@ export default function WhoSaidItPage() {
   const isDark = theme === "dark";
 
   const isOver = game.status === "correct" || game.status === "wrong-final";
-  const isLastPuzzle = game.puzzleIndex + 1 >= game.totalPuzzles;
+  const isLastPuzzle = game.puzzlesPlayed + 1 >= game.totalPuzzles;
 
   function getOptionState(option: string): OptionState {
     const isAnswer = option === game.puzzle.answer;

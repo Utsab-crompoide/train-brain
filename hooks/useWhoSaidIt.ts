@@ -14,6 +14,7 @@ export interface UseWhoSaidItReturn {
   puzzle: WhoSaidItPuzzle;
   puzzleIndex: number;
   totalPuzzles: number;
+  puzzlesPlayed: number;
   status: GameStatus;
   selectedOption: string | null;
   firstWrongOption: string | null; // tracks the first wrong guess
@@ -161,6 +162,7 @@ export function useWhoSaidIt(): UseWhoSaidItReturn {
     puzzle,
     puzzleIndex,
     totalPuzzles: whoSaidItPuzzles.length,
+    puzzlesPlayed: currentPositionInShuffle,
     status,
     selectedOption,
     firstWrongOption,

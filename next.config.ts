@@ -4,6 +4,7 @@ const nextConfig = {
   output: "export",
   basePath: isProd ? "/train-brain" : "",
   assetPrefix: isProd ? "/train-brain/" : "",
+  allowedDevOrigins: ['192.168.1.105'],
   images: {
     unoptimized: true,
   },

@@ -16,9 +16,10 @@ interface CellProps {
   reveal: "idle" | "correct" | "wrong";
   isDark: boolean;
   colIndex: number;
+  isActive: boolean;
 }
 
-function Cell({ letter, reveal, isDark, colIndex }: CellProps) {
+function Cell({ letter, reveal, isDark, colIndex, isActive }: CellProps) {
   const base = "flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 rounded-lg border-2 text-2xl font-bold uppercase tracking-widest select-none transition-all duration-200";
 
   const stateClass =
@@ -30,13 +31,17 @@ function Cell({ letter, reveal, isDark, colIndex }: CellProps) {
         ? isDark
           ? "bg-red-700 border-red-600 text-white"
           : "bg-red-500 border-red-400 text-white"
-        : letter
+        : isActive
           ? isDark
-            ? "bg-gray-700 border-gray-500 text-white"
-            : "bg-gray-100 border-gray-400 text-gray-900"
-          : isDark
-            ? "bg-transparent border-gray-700 text-white"
-            : "bg-transparent border-gray-300 text-gray-900";
+            ? "bg-transparent border-emerald-400 text-white"
+            : "bg-transparent border-emerald-500 text-gray-900"
+          : letter
+            ? isDark
+              ? "bg-gray-700 border-gray-500 text-white"
+              : "bg-gray-100 border-gray-400 text-gray-900"
+            : isDark
+              ? "bg-transparent border-gray-700 text-white"
+              : "bg-transparent border-gray-300 text-gray-900";
 
   return (
     <div className={`${base} ${stateClass}`} style={{ animationDelay: `${colIndex * 60}ms` }}>
@@ -49,19 +54,25 @@ interface RowProps {
   row: RowState;
   isDark: boolean;
   divRef: (el: HTMLDivElement | null) => void;
+  isActiveRow: boolean;
 }
 
-function Row({ row, isDark, divRef }: RowProps) {
+function Row({ row, isDark, divRef, isActiveRow }: RowProps) {
   const isLocked = row.status === "locked";
   const isWrong = row.status === "wrong";
   const isCorrect = row.status === "correct";
 
   const revealState: "idle" | "correct" | "wrong" = isCorrect ? "correct" : isWrong ? "wrong" : "idle";
 
+  // The active cell is the first empty cell in the row (cursor position)
+  const activeCellIndex = isActiveRow && row.status === "active"
+    ? row.letters.findIndex((l) => l === "")
+    : -1;
+
   return (
     <div ref={divRef} className={`flex gap-2 transition-all duration-300 ${isLocked ? "opacity-30" : ""} ${isWrong ? "animate-shake" : ""}`}>
       {row.letters.map((letter, ci) => (
-        <Cell key={ci} letter={isLocked ? "" : letter} reveal={revealState} isDark={isDark} colIndex={ci} />
+        <Cell key={ci} letter={isLocked ? "" : letter} reveal={revealState} isDark={isDark} colIndex={ci} isActive={ci === activeCellIndex} />
       ))}
     </div>
   );
@@ -160,6 +171,7 @@ export default function FinalWord() {
                     <input
                       type="text"
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 text-[16px] focus:outline-none"
+                      style={{ caretColor: "transparent" }}
                       value={" " + row.letters.join("")}
                       onFocus={(e) => {
                         if (isSelectable && ri !== activeRowIndex) {
@@ -205,6 +217,7 @@ export default function FinalWord() {
                     <Row
                       row={row}
                       isDark={isDark}
+                      isActiveRow={ri === activeRowIndex}
                       divRef={(el) => {
                         rowRefs.current[ri] = el;
                       }}
@@ -253,19 +266,26 @@ export default function FinalWord() {
           </div>
         </div>
         {/* ── Win banner ───────────────────────────────────────────── */}
-        {puzzleSolved && (
-          <div className="flex flex-col items-center gap-3 w-full animate-fade-in">
-            <div className={`w-full rounded-xl px-4 py-4 text-center font-bold text-lg ${isDark ? "bg-emerald-900 text-emerald-300 border border-emerald-700" : "bg-emerald-50 text-emerald-700 border border-emerald-300"}`}>🎉 Puzzle Solved! Great climb!</div>
-            <button
-              onClick={handleNextPuzzle}
-              className={`px-8 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all duration-200 active:scale-95 ${
-                isDark ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/40" : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-200"
-              }`}
-            >
-              Next Puzzle →
-            </button>
-          </div>
-        )}
+        {puzzleSolved && (() => {
+          const isLastPuzzle = currentPositionInShuffle + 1 >= PUZZLES.length;
+          return (
+            <div className="flex flex-col items-center gap-3 w-full animate-fade-in">
+              <div className={`w-full rounded-xl px-4 py-4 text-center font-bold text-lg ${isDark ? "bg-emerald-900 text-emerald-300 border border-emerald-700" : "bg-emerald-50 text-emerald-700 border border-emerald-300"}`}>
+                {isLastPuzzle ? "🏆 You've completed all puzzles! Amazing!" : "🎉 Puzzle Solved! Great climb!"}
+              </div>
+              {!isLastPuzzle && (
+                <button
+                  onClick={handleNextPuzzle}
+                  className={`px-8 py-3 rounded-xl text-sm font-bold uppercase tracking-widest transition-all duration-200 active:scale-95 ${
+                    isDark ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/40" : "bg-emerald-500 hover:bg-emerald-400 text-white shadow-lg shadow-emerald-200"
+                  }`}
+                >
+                  Next Puzzle →
+                </button>
+              )}
+            </div>
+          );
+        })()}
       </main>
 
 

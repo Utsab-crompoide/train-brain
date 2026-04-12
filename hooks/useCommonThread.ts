@@ -39,6 +39,7 @@ export interface CommonThreadState {
   puzzle: Puzzle;
   puzzleIndex: number;
   totalPuzzles: number;
+  puzzlesPlayed: number;
 
   /** How many words are currently visible (from the top) */
   revealedCount: number;
@@ -234,6 +235,7 @@ export function useCommonThread(): CommonThreadState & CommonThreadActions {
     puzzle,
     puzzleIndex,
     totalPuzzles: PUZZLES.length,
+    puzzlesPlayed: currentPositionInShuffle,
     revealedCount,
     newlyRevealedIndex,
     hintsRevealed,

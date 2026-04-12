@@ -224,7 +224,7 @@ export default function CommonThreadPage() {
         )}
 
         <p className={`mt-8 text-center text-xs ${isDark ? "text-gray-700" : "text-black"}`}>
-          Puzzle {game.puzzleIndex + 1} / {game.totalPuzzles}
+          Puzzle {game.puzzlesPlayed + 1} / {game.totalPuzzles}
         </p>
       </main>
 

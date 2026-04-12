@@ -14,6 +14,7 @@ export interface UseLiarReturn {
   puzzle: LiarPuzzle;
   puzzleIndex: number;
   totalPuzzles: number;
+  puzzlesPlayed: number;
   status: GameStatus;
   selectedIndex: number | null;
   feedback: Feedback | null;
@@ -158,6 +159,7 @@ export function useTheLiar(): UseLiarReturn {
     puzzle,
     puzzleIndex,
     totalPuzzles: liarPuzzles.length,
+    puzzlesPlayed: currentPositionInShuffle,
     status,
     selectedIndex,
     feedback,

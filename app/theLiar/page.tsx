@@ -132,7 +132,7 @@ export default function TheLiarPage() {
     return "idle";
   }
 
-  const isLastPuzzle = game.puzzleIndex + 1 >= game.totalPuzzles;
+  const isLastPuzzle = game.puzzlesPlayed + 1 >= game.totalPuzzles;
 
   return (
     <div className={`flex min-h-screen flex-col items-center font-sans transition-colors duration-300 ${isDark ? "bg-gray-950" : "bg-gray-50"}`}>
