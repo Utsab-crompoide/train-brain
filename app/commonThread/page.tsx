@@ -50,31 +50,23 @@ function ProgressDots({ total, revealed, isDark }: { total: number; revealed: nu
 }
 
 function HintBoxes({ answer, hintsRevealed, gameStatus, isDark }: { answer: string; hintsRevealed: number; gameStatus: "playing" | "won" | "lost"; isDark: boolean }) {
+  const isGuessRevealed = gameStatus !== "playing";
+
   return (
-    <div className="flex gap-2 flex-wrap justify-center">
+    <div
+      className={`flex items-center justify-center gap-1 px-4 rounded-xl border-2 text-xl font-black transition-all duration-300 ${
+        hintsRevealed > 0 ? "border-indigo-500 bg-indigo-950" : isGuessRevealed ? (isDark ? "border-gray-600 bg-gray-800" : "border-gray-300 bg-gray-200") : isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-100"
+      }`}
+      style={{ height: 52, minWidth: 44 }}
+    >
       {answer.split("").map((char, i) => {
         const isHintRevealed = i < hintsRevealed;
-        const isGuessRevealed = gameStatus !== "playing";
         const shouldShowChar = isHintRevealed || isGuessRevealed;
 
         return (
-          <div
-            key={i}
-            className={`flex items-center justify-center rounded-xl border-2 text-xl font-black transition-all duration-300 ${
-              isHintRevealed
-                ? "border-indigo-500 bg-indigo-950 text-indigo-300"
-                : isGuessRevealed
-                  ? isDark
-                    ? "border-gray-600 bg-gray-800 text-gray-400"
-                    : "border-gray-300 bg-gray-200 text-gray-500"
-                  : isDark
-                    ? "border-gray-700 bg-gray-900 text-gray-700"
-                    : "border-gray-200 bg-gray-100 text-gray-300"
-            }`}
-            style={{ width: 44, height: 52 }}
-          >
+          <span key={i} className={`transition-all duration-300 ${isHintRevealed ? "text-indigo-300" : isGuessRevealed ? (isDark ? "text-gray-400" : "text-gray-500") : isDark ? "text-gray-700" : "text-gray-300"}`}>
             {shouldShowChar ? char.toUpperCase() : "?"}
-          </div>
+          </span>
         );
       })}
     </div>
